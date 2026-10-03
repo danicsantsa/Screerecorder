@@ -1,0 +1,12 @@
+cd ~/ssr
+rm -rf build-release
+mkdir build-release
+cd build-release
+
+cmake .. \
+  -DENABLE_32BIT_GLINJECT=OFF \
+  -DWITH_QT5=ON \
+  -DWITH_QT4=OFF
+
+make -j$(nproc)
+sudo make install

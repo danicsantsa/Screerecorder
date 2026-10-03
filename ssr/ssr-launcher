@@ -1,0 +1,30 @@
+#!/bin/sh
+# Launcher wrapper (workspace) to run SimpleScreenRecorder with a minimal, safe environment
+BINARY=/usr/local/bin/simplescreenrecorder
+if [ ! -x "$BINARY" ]; then
+  echo "Error: $BINARY not found or not executable" >&2
+  exit 2
+fi
+PATH=/usr/bin:/bin:/usr/local/bin
+[ -n "$DISPLAY" ] && DISP="$DISPLAY"
+[ -n "$XAUTHORITY" ] && XAUTH="$XAUTHORITY"
+[ -n "$XDG_RUNTIME_DIR" ] && XDG="$XDG_RUNTIME_DIR"
+[ -n "$DBUS_SESSION_BUS_ADDRESS" ] && DBUS="$DBUS_SESSION_BUS_ADDRESS"
+[ -n "$HOME" ] && HOME_VAR="$HOME"
+unset LD_LIBRARY_PATH
+unset LD_PRELOAD
+# Try to force use of the system dynamic loader and library path to avoid snap/core20 libs
+LD_LOADER="/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+if [ ! -x "$LD_LOADER" ]; then
+  LD_LOADER="/lib64/ld-linux-x86-64.so.2"
+fi
+LIBPATH="/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu"
+
+exec env \
+  PATH="$PATH" \
+  ${DISP:+DISPLAY="$DISP"} \
+  ${XAUTH:+XAUTHORITY="$XAUTH"} \
+  ${XDG:+XDG_RUNTIME_DIR="$XDG"} \
+  ${DBUS:+DBUS_SESSION_BUS_ADDRESS="$DBUS"} \
+  ${HOME_VAR:+HOME="$HOME_VAR"} \
+  "$LD_LOADER" --library-path "$LIBPATH" "$BINARY" "$@"
