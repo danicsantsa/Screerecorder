@@ -77,6 +77,11 @@ private:
 	enum_schedule_time_zone m_schedule_time_zone;
 	std::vector<ScheduleEntry> m_schedule_entries;
 
+	// Aufnahmezeit in Minuten (0 = unbegrenzt)
+	QSpinBox *m_spinbox_recording_time;
+	QTimer *m_timer_recording_time;
+	unsigned int m_recording_time_left;
+
 	PageInput::enum_video_backend m_video_backend;
 	PageInput::enum_video_x11_area m_video_x11_area;
 	bool m_video_x11_follow_fullscreen;

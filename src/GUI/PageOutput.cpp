@@ -187,6 +187,7 @@ PageOutput::PageOutput(MainWindow* main_window)
 	scrollarea->setWidget(scrollarea_contents);
 	{
 		m_profile_box = new ProfileBox(tr("Output profile"), scrollarea_contents, "output-profiles", &LoadProfileSettingsCallback, &SaveProfileSettingsCallback, this);
+		m_profile_box->setVisible(false); // Profilverwaltung ausblenden, Standardprofil verwenden
 
 		QGroupBox *groupbox_file = new QGroupBox(tr("File"), scrollarea_contents);
 		{

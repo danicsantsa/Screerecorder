@@ -201,11 +201,28 @@ PageRecord::PageRecord(MainWindow* main_window)
 		m_combobox_hotkey_key = new QComboBox(groupbox_recording);
 		m_combobox_hotkey_key->setToolTip(tr("The key that you have to press (combined with the given modifiers) to start or pause recording.\n"
 											 "The program that you are recording will not receive the key press."));
-		// Note: The choice of keys is currently rather limited, because capturing key presses session-wide is a bit harder than it looks.
-		// For example, applications are not allowed to capture the F1-F12 keys (on Ubuntu at least). The A-Z keys don't have this limitation apparently.
 		for(unsigned int i = 0; i < 26; ++i) {
 			m_combobox_hotkey_key->addItem(QString(QChar::fromLatin1('A' + i)));
 		}
+
+		// Aufnahmezeit
+		QLabel *label_recording_time = new QLabel(tr("Recording time (min, 0=unlimited):"), groupbox_recording);
+		m_spinbox_recording_time = new QSpinBox(groupbox_recording);
+		m_spinbox_recording_time->setRange(0, 1440); // bis 24h
+		m_spinbox_recording_time->setValue(0);
+		m_spinbox_recording_time->setToolTip(tr("Set a maximum recording time in minutes. 0 means unlimited."));
+		m_timer_recording_time = new QTimer(this);
+		m_timer_recording_time->setInterval(1000); // 1 Sekunde
+		m_timer_recording_time->setSingleShot(false);
+		connect(m_timer_recording_time, &QTimer::timeout, this, [this]() {
+			if(m_recording_time_left > 0) {
+				--m_recording_time_left;
+				if(m_recording_time_left == 0) {
+					m_timer_recording_time->stop();
+					this->OnRecordPause(); // Aufnahme stoppen
+				}
+			}
+		});
 
 		connect(m_pushbutton_record, SIGNAL(clicked()), this, SLOT(OnRecordStartPause()));
 		connect(m_pushbutton_schedule_activate, SIGNAL(clicked()), this, SLOT(OnScheduleActivateDeactivate()));
@@ -222,6 +239,12 @@ PageRecord::PageRecord(MainWindow* main_window)
 
 		QVBoxLayout *layout = new QVBoxLayout(groupbox_recording);
 		layout->addWidget(m_pushbutton_record);
+		{
+			QHBoxLayout *layout2 = new QHBoxLayout();
+			layout->addLayout(layout2);
+			layout2->addWidget(label_recording_time);
+			layout2->addWidget(m_spinbox_recording_time);
+		}
 		{
 			QHBoxLayout *layout2 = new QHBoxLayout();
 			layout->addLayout(layout2);
@@ -1267,6 +1290,14 @@ void PageRecord::OnUpdateRecordingFrame() {
 }
 
 void PageRecord::OnRecordStart() {
+	// Aufnahmezeit prüfen und Timer starten
+	unsigned int aufnahmezeit = m_spinbox_recording_time->value();
+	if(aufnahmezeit > 0) {
+		m_recording_time_left = aufnahmezeit * 60; // Sekunden
+		m_timer_recording_time->start();
+	} else {
+		m_timer_recording_time->stop();
+	}
 	if(m_main_window->IsBusy())
 		return;
 	if(!TryStartPage())
