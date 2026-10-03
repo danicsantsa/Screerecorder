@@ -8,6 +8,17 @@ https://github.com/MaartenBaert/ssr-packages
 
 ![Screenshot](data/screenshots/screenshot01.png)
 
+Platform support
+----------------
+
+This project is currently Linux-first. The repository includes a CI matrix for three operating systems, but the codebase still depends on Linux-specific components such as X11 and GLInject.
+
+- Linux: supported and primary target
+- macOS: experimental port, not fully validated yet
+- Windows: experimental port, not fully validated yet
+
+The GitHub Actions workflow for this matrix lives in `.github/workflows/ci-multiplatform.yml`.
+
 License
 -------
 

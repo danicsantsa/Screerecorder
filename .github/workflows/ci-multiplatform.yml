@@ -1,0 +1,88 @@
+name: Multi-platform CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake pkg-config \
+            qtbase5-dev qttools5-dev qt5-qmake libqt5x11extras5-dev \
+            libavformat-dev libavcodec-dev libavutil-dev libswscale-dev \
+            libasound2-dev libpulse-dev libjack-dev \
+            libx11-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev \
+            libv4l-dev libgl1-mesa-dev libglu1-mesa-dev
+
+      - name: Configure project
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DWITH_QT5=TRUE
+
+      - name: Build project
+        run: cmake --build build -j"$(nproc)"
+
+  macos:
+    name: macOS (experimental port)
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install macOS dependencies
+        shell: bash
+        run: |
+          brew update
+          brew install cmake ffmpeg qt@5
+
+      - name: Configure project
+        shell: bash
+        run: |
+          export PATH="/opt/homebrew/opt/qt@5/bin:/usr/local/opt/qt@5/bin:$PATH"
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DWITH_QT5=TRUE \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt@5)"
+
+      - name: Build project
+        shell: bash
+        run: cmake --build build -j"$(sysctl -n hw.ncpu)"
+
+  windows:
+    name: Windows (experimental port)
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install Windows dependencies
+        shell: pwsh
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          choco install qt5-default -y
+
+      - name: Configure project
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DWITH_QT5=TRUE
+
+      - name: Build project
+        shell: pwsh
+        run: |
+          cmake --build build --config Release
