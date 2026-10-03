@@ -72,8 +72,27 @@ If you want to compile step-by-step (without `simple-build-and-install`), you ca
     mkdir build-release
     cd build-release
     cmake -DCMAKE_INSTALL_PREFIX="/usr" -DCMAKE_BUILD_TYPE=Release ..
-    make
+    make -j"$(nproc)"
     sudo make install
+
+On modern Linux systems, the project may detect Qt5 or Qt6 automatically. If CMake still prefers Qt4 or reports `Found unsuitable Qt version`, force a supported Qt version explicitly:
+
+    mkdir build-release
+    cd build-release
+    cmake -DCMAKE_INSTALL_PREFIX="/usr" -DCMAKE_BUILD_TYPE=Release -DWITH_QT5=TRUE ..
+    cmake --build . -j"$(nproc)"
+
+Or, if Qt6 is available:
+
+    mkdir build-release
+    cd build-release
+    cmake -DCMAKE_INSTALL_PREFIX="/usr" -DCMAKE_BUILD_TYPE=Release -DWITH_QT6=TRUE ..
+    cmake --build . -j"$(nproc)"
+
+You can then run the application directly from the build directory:
+
+    ./src/simplescreenrecorder --help
+    ./src/simplescreenrecorder
 
 Note that you may need to specify additional options depending on which Linux distribution and CPU architecture you have. The `simple-build-and-install` script detects the correct options automatically, you can run it to see which options you need.
 
